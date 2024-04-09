@@ -1,6 +1,6 @@
 import { type Plugin, ServiceInfos } from '@cpn-console/hooks'
 import monitor from './monitor.js'
-import { upsertProjectOpenProject } from './functions.js'
+import { deleteProjectOpenProject, upsertProjectOpenProject } from './functions.js'
 
 const infos: ServiceInfos = {
   name: 'supportserviceteam',
@@ -16,6 +16,11 @@ export const plugin: Plugin = {
     upsertProject: {
       steps: {
         main: upsertProjectOpenProject,
+      },
+    },
+    deleteProject: {
+      steps: {
+        main: deleteProjectOpenProject,
       },
     },
   },

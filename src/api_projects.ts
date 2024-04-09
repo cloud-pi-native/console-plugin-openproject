@@ -53,3 +53,23 @@ export async function createProject (client: AxiosInstance, projectName: string)
 
   return resp
 }
+
+/**
+ * Delete a project
+ * @param client AxiosInstance to make the request
+ * @param projectID Name of the project
+ * @returns OpenProject treat this request in async mode
+ */
+export async function deleteProject (client: AxiosInstance, projectID: number): Promise<AxiosResponse> {
+  const resp = client.request({
+    url: `/projects/${projectID}`,
+    method: 'delete',
+  }).then(response => {
+    return response
+  }).catch(error => {
+    console.error(error)
+    return error
+  })
+
+  return resp
+}

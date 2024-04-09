@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios'
 import { client } from './config.js'
 import { findUserByLogin } from './api_users.js'
-import { createProject, findProjectByName } from './api_projects.js'
+import { createProject, deleteProject, findProjectByName } from './api_projects.js'
 import { parseError, type Project, type StepCall, PluginResult } from '@cpn-console/hooks'
 import { requiredEnv } from '@cpn-console/shared'
 
@@ -11,19 +11,25 @@ function delay (ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-async function getOrCreateProjectID (projectName: string): Promise<number> {
-  let responseProject: AxiosResponse = await findProjectByName(client, projectName)
+async function getProjectID (projectName: string): Promise<number> {
+  const responseProject: AxiosResponse = await findProjectByName(client, projectName)
 
-  if (responseProject?.data?.count === 0) {
+  return responseProject?.data?._embedded?.elements[0]?.id
+}
+
+async function getOrCreateProjectID (projectName: string): Promise<number> {
+  let projectID = await getProjectID(projectName)
+
+  if (projectID === undefined) {
     // Création du projet s'il n'existe pas
     await createProject(client, projectName)
 
     // La création d'un projet est asynchrone côté OpenProject, sleep arbitraire
     await delay(3000)
-    responseProject = await findProjectByName(client, projectName)
+    projectID = await getProjectID(projectName)
   }
 
-  return responseProject?.data?._embedded?.elements[0]?.id
+  return projectID
 }
 
 async function getUserID (login: string): Promise<number> {
@@ -124,6 +130,48 @@ export const upsertProjectOpenProject: StepCall<Project> = async (_payload) => {
     if (usersNotFound.length > 0) {
       returnData.status.message = 'Error users not found'
       returnData.usersNotFound = usersNotFound
+    }
+
+    return returnData
+  } catch (error) {
+    return {
+      status: {
+        result: 'OK',
+        message: 'An error happend while creating project/adding users',
+      },
+      error: parseError(error),
+    }
+  }
+}
+
+export const deleteProjectOpenProject: StepCall<Project> = async (_payload) => {
+  try {
+    const organizationName : string = _payload.args.organization.name
+    const projectNameDSO : string = _payload.args.name
+
+    // Gestion de l'unicité des noms de projet comme pour la console
+    const projectNameUniq : string = `${organizationName}-${projectNameDSO}`
+
+    const projectID = await getOrCreateProjectID(projectNameUniq)
+
+    if (projectID === undefined) {
+      console.warn(`Project not found: ${projectNameUniq}`)
+      const returnData: PluginResult = {
+        status: {
+          result: 'OK',
+          message: 'Project not found',
+        },
+        projectName: `${projectNameUniq}`,
+      }
+      return returnData
+    }
+
+    await deleteProject(client, projectID)
+
+    const returnData: PluginResult = {
+      status: {
+        result: 'OK',
+      },
     }
 
     return returnData
