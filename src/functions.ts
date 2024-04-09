@@ -20,7 +20,7 @@ async function getProjectID (projectName: string): Promise<number> {
 async function getOrCreateProjectID (projectName: string): Promise<number> {
   let projectID = await getProjectID(projectName)
 
-  if (projectID === undefined) {
+  if (!projectID) {
     // Création du projet s'il n'existe pas
     await createProject(client, projectName)
 
@@ -49,7 +49,7 @@ async function getUsersIDForProject (projectID: number): Promise<Array<Membershi
   const memberships: Array<Membership> = []
 
   const membershipsCount = resp?.data?.count
-  if ((membershipsCount === 0) || (membershipsCount === undefined)) {
+  if ((membershipsCount === 0) || (!membershipsCount)) {
     return memberships
   }
 
@@ -86,7 +86,7 @@ export const upsertProjectOpenProject: StepCall<Project> = async (_payload) => {
 
     const projectID = await getOrCreateProjectID(projectNameUniq)
 
-    if (projectID === undefined) {
+    if (!projectID) {
       console.warn(`Project not found: ${projectNameUniq}`)
       const returnData: PluginResult = {
         status: {
@@ -104,7 +104,7 @@ export const upsertProjectOpenProject: StepCall<Project> = async (_payload) => {
     for (const user of users) {
       const userID = await getUserID(user.email)
 
-      if (userID === undefined) {
+      if (!userID) {
         usersNotFound.push(user.email)
       } else {
         usersFound.push(userID)
@@ -154,7 +154,7 @@ export const deleteProjectOpenProject: StepCall<Project> = async (_payload) => {
 
     const projectID = await getOrCreateProjectID(projectNameUniq)
 
-    if (projectID === undefined) {
+    if (!projectID) {
       console.warn(`Project not found: ${projectNameUniq}`)
       const returnData: PluginResult = {
         status: {
