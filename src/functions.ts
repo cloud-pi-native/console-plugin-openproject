@@ -5,7 +5,11 @@ import { createProject, findProjectByName } from './api_projects.js'
 import { parseError, type Project, type StepCall, PluginResult } from '@cpn-console/hooks'
 import { requiredEnv } from '@cpn-console/shared'
 
-import { createMembership } from './api_memberships.js'
+import { getMembershipsForProject, createMembership, deleteMembership } from './api_memberships.js'
+
+function delay (ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 async function getOrCreateProjectID (projectName: string): Promise<number> {
   let responseProject: AxiosResponse = await findProjectByName(client, projectName)
@@ -13,6 +17,9 @@ async function getOrCreateProjectID (projectName: string): Promise<number> {
   if (responseProject?.data?.count === 0) {
     // Création du projet s'il n'existe pas
     await createProject(client, projectName)
+
+    // La création d'un projet est asynchrone côté OpenProject, sleep arbitraire
+    await delay(3000)
     responseProject = await findProjectByName(client, projectName)
   }
 
@@ -25,56 +32,98 @@ async function getUserID (login: string): Promise<number> {
   return resp?.data?._embedded?.elements[0]?.id
 }
 
+type Membership = {
+  membershipID: number,
+  userID: number
+}
+
+async function getUsersIDForProject (projectID: number): Promise<Array<Membership>> {
+  const resp: AxiosResponse = await getMembershipsForProject(client, projectID)
+
+  const memberships: Array<Membership> = []
+
+  const membershipsCount = resp?.data?.count
+  if ((membershipsCount === 0) || (membershipsCount === undefined)) {
+    return memberships
+  }
+
+  for (const element of resp.data._embedded.elements) {
+    if (element._type !== 'Membership') {
+      continue
+    }
+
+    // String de la forme: '/api/v3/roles/33'
+    const userHref = element._links.principal.href
+    const userID = userHref.split('/').at(-1)
+
+    const mTmp:Membership = {
+      membershipID: parseInt(element.id),
+      userID: parseInt(userID),
+    }
+
+    memberships.push(mTmp)
+  }
+
+  return memberships
+}
+
 export const upsertProjectOpenProject: StepCall<Project> = async (_payload) => {
   try {
     const organizationName : string = _payload.args.organization.name
-    const projectNameConsole : string = _payload.args.name
+    const projectNameDSO : string = _payload.args.name
     const users = _payload.args.users
 
     const roleID = parseInt(requiredEnv('MEMBERSHIP_ROLE_ID'))
 
     // Gestion de l'unicité des noms de projet comme pour la console
-    const projectName : string = `${organizationName}-${projectNameConsole}`
+    const projectNameUniq : string = `${organizationName}-${projectNameDSO}`
 
-    const projectID = await getOrCreateProjectID(projectName)
+    const projectID = await getOrCreateProjectID(projectNameUniq)
 
     if (projectID === undefined) {
+      console.warn(`Project not found: ${projectNameUniq}`)
       const returnData: PluginResult = {
         status: {
           result: 'OK',
           message: 'Project not found',
         },
-        projectName: `${projectName}`,
+        projectName: `${projectNameUniq}`,
       }
       return returnData
     }
 
-    const usersKO: Array<string> = []
-    const usersOK: Array<number> = []
+    const usersNotFound: Array<string> = []
+    const usersFound: Array<number> = []
 
     for (const user of users) {
       const userID = await getUserID(user.email)
 
       if (userID === undefined) {
-        usersKO.push(user.email)
+        usersNotFound.push(user.email)
       } else {
-        usersOK.push(userID)
+        usersFound.push(userID)
       }
     }
 
-    await Promise.all(usersOK.map(async userID => {
-      createMembership(client, projectID, userID, roleID)
-    }))
+    const memberships = await getUsersIDForProject(projectID)
+
+    const membershipsToCreate = usersFound.filter((id) => !memberships.some((membership) => membership.userID === id))
+    const membershipsToDelete = memberships.filter((membership) => !usersFound.some((id) => membership.userID === id))
+
+    await Promise.all(membershipsToDelete.map(membership => deleteMembership(client, membership.membershipID)))
+    await Promise.all(membershipsToCreate.map(userID => createMembership(client, projectID, userID, roleID)))
 
     const returnData: PluginResult = {
       status: {
         result: 'OK',
       },
+      membershipsCreated: `${membershipsToCreate.length}`,
+      membershipsDeleted: `${membershipsToDelete.length}`,
     }
 
-    if (usersKO.length > 0) {
+    if (usersNotFound.length > 0) {
       returnData.status.message = 'Error users not found'
-      returnData.usersKO = usersKO
+      returnData.usersNotFound = usersNotFound
     }
 
     return returnData

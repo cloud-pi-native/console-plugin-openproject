@@ -6,7 +6,6 @@ export async function findUserByLogin (client: AxiosInstance, login: string): Pr
     url: `/users/?${params}`,
     method: 'get',
   }).then(response => {
-    console.log(response)
     return response
   }).catch(response => {
     console.error(response)

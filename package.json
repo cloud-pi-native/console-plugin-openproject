@@ -1,7 +1,7 @@
 {
-  "name": "@cpn-console/hello-world-plugin",
+  "name": "@cpn-console/openproject-plugin",
   "version": "0.1.0",
-  "description": "Hello world plugin for DSO console",
+  "description": "Permet de gérer les projets et utilisateurs sur OpenProject depuis la console DSO",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -22,8 +22,6 @@
   },
   "devDependencies": {
     "@cpn-console/eslint-config": "^1.0.0",
-    "@cpn-console/keycloak-plugin": "^2.0.1",
-    "@cpn-console/kubernetes-plugin": "^2.0.0",
     "@cpn-console/ts-config": "^1.1.0",
     "@types/node": "^20.11.24",
     "husky": "^9.0.11",
