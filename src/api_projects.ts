@@ -8,19 +8,12 @@ import { requiredEnv } from '@cpn-console/shared'
  * @returns the axios response
  */
 export async function findProjectByName (client: AxiosInstance, projectName: string): Promise<AxiosResponse> {
-  // 
   const params = `filters=[{"name":{"operator":"=","values":"${projectName}"}},{"active":{"operator":"=","values":["t"]}}]`
-  const resp = await client.request({
+
+  return client.request({
     url: `/projects/?${params}`,
     method: 'get',
-  }).then(response => {
-    return response
-  }).catch(response => {
-    console.error(response)
-    return response
   })
-
-  return resp
 }
 
 /**
@@ -35,7 +28,7 @@ export async function createProject (client: AxiosInstance, projectName: string)
   const templateProjectID = requiredEnv('TEMPLATE_PROJECT_ID')
   const ancestorProjectID = requiredEnv('ANCESTOR_PROJECT_ID')
 
-  const resp = client.request({
+  return client.request({
     url: `/projects/${templateProjectID}/copy`,
     method: 'post',
     data: {
@@ -44,14 +37,7 @@ export async function createProject (client: AxiosInstance, projectName: string)
         href: `/api/v3/projects/${ancestorProjectID}`,
       },
     },
-  }).then(response => {
-    return response
-  }).catch(error => {
-    console.error(error)
-    return error
   })
-
-  return resp
 }
 
 /**
@@ -61,15 +47,8 @@ export async function createProject (client: AxiosInstance, projectName: string)
  * @returns OpenProject treat this request in async mode
  */
 export async function deleteProject (client: AxiosInstance, projectID: number): Promise<AxiosResponse> {
-  const resp = client.request({
+  return client.request({
     url: `/projects/${projectID}`,
     method: 'delete',
-  }).then(response => {
-    return response
-  }).catch(error => {
-    console.error(error)
-    return error
   })
-
-  return resp
 }
