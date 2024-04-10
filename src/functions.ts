@@ -7,15 +7,12 @@ import { requiredEnv } from '@cpn-console/shared'
 
 import { getMembershipsForProject, createMembership, deleteMembership } from './api_memberships.js'
 
-
 type Membership = {
   membershipID: number,
   userID: number
 }
 
 type UserObjectOpenProject = UserObject & { opUserID: number }
-
-
 
 function delay (ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
