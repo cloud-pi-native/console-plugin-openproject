@@ -27,7 +27,7 @@ jobs:
 
       - name: Get package version
         id: pkg-version
-        run: echo "version=$(jq -r '.version' package.json
+        run: echo "version=$(jq -r '.version' package.json)"
 
       - name: Run a one-line script
         run: echo Hello, world! 
