@@ -31,33 +31,26 @@ jobs:
 
       - name: Create release
         id: create-release
-        uses: elgohr/Github-Release-Action@v5
+        uses: actions/create-release@v1
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          title: Release v${{ steps.pkg-version.outputs.version}}
+          tag_name: v${{ steps.pkg-version.outputs.version }}
+          release_name: Release v${{ steps.pkg-version.outputs.version }}
+          body: New version v${{ steps.pkg-version.outputs.version }}
 
-      - name: Clean previous install
-        run: rm -rf ./node_modules
+      - name: Install production dependencies
+        run: rm -rf ./node_modules && npm install --ignore-scripts --omit=dev
 
-      - name: Install production dependancies
-        run: npm install --ignore-script --omit=dev
-
-      - name: Compress build folder
+      - name: Zip build folder
         run: zip -r ./package.zip ./package.json ./dist ./node_modules
 
       - name: Upload release artifact
-        uses: softprops/action-gh-release@v2
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: ./package.zip
-
-      - name: Run a one-line script
-        run: echo Hello, world! 
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
-          echo Node version ${{ inputs.nodeVersion }}
-          echo package version: ${{ steps.pkg-version.outputs.version }} 
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./package.zip
+          asset_name: build-artifact.zip
+          asset_content_type: application/gzip
