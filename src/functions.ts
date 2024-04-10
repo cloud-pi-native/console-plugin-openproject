@@ -2,10 +2,20 @@ import { AxiosResponse } from 'axios'
 import { client } from './config.js'
 import { findUserByLogin } from './api_users.js'
 import { createProject, deleteProject, findProjectByName } from './api_projects.js'
-import { parseError, type Project, type StepCall, PluginResult } from '@cpn-console/hooks'
+import { parseError, type UserObject, type Project, type StepCall, PluginResult } from '@cpn-console/hooks'
 import { requiredEnv } from '@cpn-console/shared'
 
 import { getMembershipsForProject, createMembership, deleteMembership } from './api_memberships.js'
+
+
+type Membership = {
+  membershipID: number,
+  userID: number
+}
+
+type UserObjectOpenProject = UserObject & { opUserID: number }
+
+
 
 function delay (ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -33,11 +43,6 @@ async function getUserID (login: string): Promise<number | undefined> {
   const resp: AxiosResponse = await findUserByLogin(client, login)
 
   return resp?.data?._embedded?.elements[0]?.id
-}
-
-type Membership = {
-  membershipID: number,
-  userID: number
 }
 
 async function getUsersIDForProject (projectID: number): Promise<Array<Membership>> {
@@ -98,8 +103,7 @@ export const upsertProjectOpenProject: StepCall<Project> = async (payload) => {
     const usersID = await Promise.all(users.map(async user => ({ ...user, opUserID: await getUserID(user.email) })))
 
     const usersNotFound = usersID.filter(opUser => !opUser.opUserID)
-    const usersFound = usersID.filter(opUser => opUser.opUserID)
-
+    const usersFound: Array<UserObjectOpenProject> = usersID.filter(opUser => opUser.opUserID) as Array<UserObjectOpenProject>
     const memberships = await getUsersIDForProject(projectID)
 
     const membershipsToCreate = usersFound.filter((user) => !memberships.some((membership) => membership.userID === user.opUserID))
