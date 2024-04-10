@@ -35,8 +35,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          title: MyReleaseMessage
-        
+          title: Release v${{ steps.pkg-version.outputs.version}}
+
+      - name: Clean previous install
+        run: rm -rf ./node_modules
+
+      - name: Install production dependancies
+        run: npm install --ignore-script --omit=dev
+
+      - name: Compress build folder
+        run: zip -r ./package.zip ./package.json ./dist ./node_modules
+
+      - name: Upload release artifact
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./package.zip
 
       - name: Run a one-line script
         run: echo Hello, world! 
