@@ -27,7 +27,7 @@ jobs:
 
       - name: Get package version
         id: pkg-version
-        run: echo "version=$(jq -r '.version' package.json)"
+        run: echo "version=$(jq -r '.version' package.json)" >> $GITHUB_OUTPUT
 
       - name: Run a one-line script
         run: echo Hello, world! 
@@ -38,4 +38,4 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
           echo Node version ${{ inputs.nodeVersion }}
-          echo package version: ${{ steps }}
+          echo package version: ${{ steps.pkg-version.outputs.version }} 
