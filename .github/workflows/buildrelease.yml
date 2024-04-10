@@ -38,4 +38,4 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
           echo Node version ${{ inputs.nodeVersion }}
-          package version: ${{ steps }}
+          echo package version: ${{ steps }}
