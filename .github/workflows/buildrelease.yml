@@ -29,6 +29,15 @@ jobs:
         id: pkg-version
         run: echo "version=$(jq -r '.version' package.json)" >> $GITHUB_OUTPUT
 
+      - name: Create release
+        id: create-release
+        uses: elgohr/Github-Release-Action@v5
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          title: MyReleaseMessage
+        
+
       - name: Run a one-line script
         run: echo Hello, world! 
 
