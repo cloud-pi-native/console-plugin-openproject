@@ -1,0 +1,63 @@
+name: Build and Release
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      nodeVersion:
+        description: "Version de nodejs"
+        default: "21.6.2"
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.nodeVersion }}
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cloud-pi-native'
+
+      - name: Install dependancies
+        run: npm install --ignore-scripts
+
+      - name: Build plugin
+        run: npm run build
+
+      - name: Get package version
+        id: pkg-version
+        run: echo "version=$(jq -r '.version' package.json)" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.pkg-version.outputs.version }}
+          release_name: Release v${{ steps.pkg-version.outputs.version }}
+          body: New version v${{ steps.pkg-version.outputs.version }}
+
+      - name: Install production dependencies
+        run: rm -rf ./node_modules && npm install --ignore-scripts --omit=dev
+
+      - name: Zip build folder
+        run: zip -r ./package.zip ./package.json ./dist ./node_modules
+
+      - name: Upload release artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./package.zip
+          asset_name: build-artifact.zip
+          asset_content_type: application/gzip
+
+      - name: Publish
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
