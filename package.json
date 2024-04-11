@@ -12,8 +12,7 @@
     "build:clean": "rm -rf ./dist ./types ./tsconfig.tsbuildinfo",
     "format": "eslint ./src --ext .js,.cjs,.ts --fix",
     "lint": "eslint ./src",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@cpn-console/hooks": "^2.0.1",
