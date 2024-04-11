@@ -1,0 +1,48 @@
+{
+  "name": "@cpn-console/openproject-plugin",
+  "version": "0.1.0",
+  "description": "Permet de gérer les projets et utilisateurs sur OpenProject depuis la console DSO",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./types",
+  "scripts": {
+    "dev": "nodemon --watch src --ext .ts --exec 'npm run build'",
+    "build": "tsc & cp -r files/ dist/",
+    "build:clean": "rm -rf ./dist ./types ./tsconfig.tsbuildinfo",
+    "format": "eslint ./src --ext .js,.cjs,.ts --fix",
+    "lint": "eslint ./src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@cpn-console/hooks": "^2.0.1",
+    "@cpn-console/shared": "^1.0.1",
+    "axios": "^1.6.8"
+  },
+  "devDependencies": {
+    "@cpn-console/eslint-config": "^1.0.0",
+    "@cpn-console/ts-config": "^1.1.0",
+    "@types/node": "^20.11.24",
+    "nodemon": "^3.1.0",
+    "typescript": "^5.3.3",
+    "typescript-transform-paths": "^3.4.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cloud-pi-native/console-plugin-openproject.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "tag": "latest"
+  },
+  "files": [
+    "dist",
+    "types"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  }
+}
