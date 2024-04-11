@@ -31,6 +31,10 @@
     "type": "git",
     "url": "https://github.com/cloud-pi-native/console-plugin-openproject.git"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "tag": "latest"
+  },
   "files": [
     "dist",
     "types"
