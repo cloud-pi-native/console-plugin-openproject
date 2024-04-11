@@ -27,10 +27,9 @@
     "typescript": "^5.3.3",
     "typescript-transform-paths": "^3.4.7"
   },
-  "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public",
-    "tag": "latest"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cloud-pi-native/console-plugin-openproject.git"
   },
   "files": [
     "dist",
