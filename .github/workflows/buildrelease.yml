@@ -18,7 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.nodeVersion }}
-          
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@cloud-pi-native'
 
       - name: Install dependancies
         run: npm install --ignore-scripts
