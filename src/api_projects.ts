@@ -25,8 +25,8 @@ export async function findProjectByName (client: AxiosInstance, projectName: str
  * @returns OpenProject treat this request in async mode
  */
 export async function createProject (client: AxiosInstance, projectName: string): Promise<AxiosResponse> {
-  const templateProjectID = requiredEnv('TEMPLATE_PROJECT_ID')
-  const ancestorProjectID = requiredEnv('ANCESTOR_PROJECT_ID')
+  const templateProjectID = requiredEnv('OPENPROJECT_TEMPLATE_PROJECT_ID')
+  const ancestorProjectID = requiredEnv('OPENPROJECT_ANCESTOR_PROJECT_ID')
 
   return client.request({
     url: `/projects/${templateProjectID}/copy`,

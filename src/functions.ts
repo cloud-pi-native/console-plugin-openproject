@@ -1,6 +1,6 @@
 import { AxiosResponse } from 'axios'
 import { client } from './config.js'
-import { findUserByLogin } from './api_users.js'
+import { createUser, findUserByLogin } from './api_users.js'
 import { createProject, deleteProject, findProjectByName } from './api_projects.js'
 import { parseError, type UserObject, type Project, type StepCall, PluginResult } from '@cpn-console/hooks'
 import { requiredEnv } from '@cpn-console/shared'
@@ -42,6 +42,17 @@ async function getUserID (login: string): Promise<number | undefined> {
   return resp?.data?._embedded?.elements[0]?.id
 }
 
+async function getOrCreateUserID (user: UserObject): Promise<number | undefined> {
+  const userID = await getUserID(user.email)
+
+  if (userID) return userID
+
+  console.log('User not found on OpenProject, create user')
+  await createUser(client, user.firstName, user.lastName, user.email)
+
+  return await getUserID(user.email)
+}
+
 async function getUsersIDForProject (projectID: number): Promise<Array<Membership>> {
   const resp: AxiosResponse = await getMembershipsForProject(client, projectID)
 
@@ -78,7 +89,7 @@ export const upsertProjectOpenProject: StepCall<Project> = async (payload) => {
     const projectNameDSO : string = payload.args.name
     const users = payload.args.users
 
-    const roleID = parseInt(requiredEnv('MEMBERSHIP_ROLE_ID'))
+    const roleID = parseInt(requiredEnv('OPENPROJECT_MEMBERSHIP_ROLE_ID'))
 
     // Gestion de l'unicité des noms de projet comme pour la console
     const projectNameUniq : string = `${organizationName}-${projectNameDSO}`
@@ -97,7 +108,7 @@ export const upsertProjectOpenProject: StepCall<Project> = async (payload) => {
       return returnData
     }
 
-    const usersID = await Promise.all(users.map(async user => ({ ...user, opUserID: await getUserID(user.email) })))
+    const usersID = await Promise.all(users.map(async user => ({ ...user, opUserID: await getOrCreateUserID(user) })))
 
     const usersNotFound = usersID.filter(opUser => !opUser.opUserID)
     const usersFound: Array<UserObjectOpenProject> = usersID.filter(opUser => opUser.opUserID) as Array<UserObjectOpenProject>
