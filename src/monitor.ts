@@ -1,10 +1,12 @@
-import { type MonitorInfos, MonitorStatus, Monitor } from '@cpn-console/shared'
+import { type MonitorInfos, MonitorStatus, Monitor, requiredEnv } from '@cpn-console/shared'
 import axios from 'axios'
+
+const openprojectBaseURL = requiredEnv('OPENPROJECT_BASE_URL')
 
 const monitor = async (instance: Monitor): Promise<MonitorInfos> => {
   instance.lastStatus.lastUpdateTimestamp = (new Date()).getTime()
   try {
-    await axios.get('https://support.dev.numerique-interieur.com/health_checks/all', {
+    await axios.get(`${openprojectBaseURL}/health_checks/all`, {
       validateStatus: (res) => res === 200,
     })
     instance.lastStatus.status = MonitorStatus.OK
