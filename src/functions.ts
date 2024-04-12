@@ -14,10 +14,6 @@ type Membership = {
 
 type UserObjectOpenProject = UserObject & { opUserID: number }
 
-function delay (ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
 async function getProjectID (projectName: string): Promise<number> {
   const responseProject: AxiosResponse = await findProjectByName(client, projectName)
 
@@ -32,8 +28,20 @@ async function getOrCreateProjectID (projectName: string): Promise<number> {
   await createProject(client, projectName)
 
   // La création d'un projet est asynchrone côté OpenProject, sleep arbitraire
-  await delay(3000)
-  return await getProjectID(projectName)
+  const prom: Promise<number> = new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      const id = await getProjectID(projectName)
+      if (id) {
+        resolve(id)
+        clearInterval(interval)
+      }
+    }, 1500)
+    setTimeout(() => {
+      clearInterval(interval)
+      reject(Error('Project not found'))
+    }, 15000)
+  })
+  return prom
 }
 
 async function getUserID (login: string): Promise<number | undefined> {
